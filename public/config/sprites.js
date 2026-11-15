@@ -1,6 +1,6 @@
 // ВСЕ настройки пиксельных компьютеров — здесь. Игровую логику трогать не нужно.
 export const SPRITES = {
-  sheets: { 1: 'assets/computers/team1/idle.png', 2: 'assets/computers/team2/idle.png' },
+  sheets: { 1: 'assets/computers/team1/pink.png', 2: 'assets/computers/team2/blue.png' },
   frame: 128,        // размер одного кадра, px (128×128)
   frames: 5,         // кадров в спрайт-листе (в один ряд слева направо)
   fps: 4,            // скорость анимации, кадров в секунду
