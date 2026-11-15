@@ -40,7 +40,7 @@ async function loadGame() {
   if (st !== S.startedAt) Object.assign(S, { startedAt: st, key: '', last: '', counts: null, my: {}, votes: {}, voteQ: -1 });
 }
 async function loadVotes(q) {
-  const { data } = await sb.from('votes').select('player_id,team,choice').eq('q', q);
+  const { data } = await sb.from('votes').select('player_id,team,choice').eq('q', q).eq('team', S.team);
   if (!data || S.voteQ !== q) return;
   const v = {};
   data.forEach(r => { v[r.player_id] = { team: r.team, choice: r.choice }; });
@@ -124,7 +124,7 @@ function renderQuestion(q) {
 function renderVotes() {
   if (!document.getElementById('v0')) return;
   const mine = S.votes[S.id];
-  const list = Object.entries(S.votes).sort((a, b) => a[1].team - b[1].team || (a[0] < b[0] ? -1 : 1));
+  const list = Object.entries(S.votes).filter(([, v]) => v.team === S.team).sort((a, b) => a[1].team - b[1].team || (a[0] < b[0] ? -1 : 1));
   for (let i = 0; i < 4; i++) {
     document.getElementById('v' + i).innerHTML = list.filter(([, v]) => v.choice === i)
       .map(([id, v]) => `<svg class="fl t${v.team}${id === S.id ? ' me' : ''}"><use href="#flame"/></svg>`).join('');
@@ -205,7 +205,7 @@ addEventListener('resize', () => { S.key = ''; S.last = ''; });
   sb.channel('quiz')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, p => {
       const r = p.new;
-      if (r && r.q === S.voteQ && r.player_id !== S.id) { S.votes[r.player_id] = { team: r.team, choice: r.choice }; renderVotes(); }
+      if (r && r.q === S.voteQ && r.team === S.team && r.player_id !== S.id) { S.votes[r.player_id] = { team: r.team, choice: r.choice }; renderVotes(); }
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'game' }, () => loadGame())
     .subscribe();
