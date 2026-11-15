@@ -140,14 +140,16 @@ async function vote(i) {
 }
 
 /* пиксельные компьютеры (настройки — config/sprites.js) */
+const missing = new Set(); // команды, чей файл картинки не найден
 const scale = () => {
   const w = Math.min(innerWidth, 900) - 40;
   return Math.max(1, Math.min(3, Math.floor((w - 24) / (2 * SPRITES.frame))));
 };
 function pcHTML(team, score) {
   const s = scale(), P = SPRITES, c = P.screen, fs = P.frame * s;
-  return `<div class="pc" data-pc="${team}" data-s="${s}" style="--s:${s};width:${fs}px;height:${fs}px;background-image:url(${P.sheets[team]});background-size:${fs * P.frames}px ${fs}px">
-    <div class="pc-screen" style="left:${c.x * s}px;top:${c.y * s}px;width:${c.w * s}px;height:${c.h * s}px"><span class="pc-score">${score}</span></div></div>`;
+  const miss = missing.has(team) ? `<div class="pc-miss">нет файла:<br>${P.sheets[team]}</div>` : '';
+  return `<div class="pc${miss ? ' nosprite' : ''}" data-pc="${team}" data-s="${s}" style="--s:${s};width:${fs}px;height:${fs}px;background-image:url(${P.sheets[team]});background-size:${fs * P.frames}px ${fs}px">
+    <div class="pc-screen" style="left:${c.x * s}px;top:${c.y * s}px;width:${c.w * s}px;height:${c.h * s}px"><span class="pc-score">${score}</span></div>${miss}</div>`;
 }
 function animate() {
   const P = SPRITES, f = Math.floor(Date.now() / (1000 / P.fps)) % P.frames;
@@ -195,7 +197,7 @@ addEventListener('resize', () => { S.key = ''; S.last = ''; });
 
 (async function boot() {
   $('#bgcode').textContent = Array(60).fill('const team = pick(1 | 2);\nfunction vote(i) { return db.save(i); }\nwhile (alive) { think(); code(); }\nif (bug) fix(); else ship();\nconsole.log("hello, world");\n').join('');
-  Object.values(SPRITES.sheets).forEach(src => { const im = new Image(); im.onerror = () => document.body.classList.add('nosprite'); im.src = src; });
+  Object.entries(SPRITES.sheets).forEach(([t, src]) => { const im = new Image(); im.onerror = () => missing.add(+t); im.src = src; });
   if (!sb) { app.innerHTML = '<div class="win center">Сначала впишите URL и ключ Supabase в <b>config/supabase-config.js</b></div>'; return; }
   await syncTime(); setInterval(syncTime, 30000);
   await loadGame();
